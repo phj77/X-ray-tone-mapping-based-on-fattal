@@ -164,6 +164,8 @@ def _gradient_descent( # used backward difference for div G referring to origina
         mae = np.mean(np.abs(f_next - f))
         f = f_next
 
+    return f
+
 
 
 def _tv_flow(f: np.ndarray, eps: float = 1e-8) -> np.ndarray: # used central defference for grad f, second order difference f; is it ok respect to numerical viewpoint?
