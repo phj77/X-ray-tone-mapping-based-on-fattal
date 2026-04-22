@@ -12,7 +12,8 @@ import numpy as np
 import cv2
 from scipy.ndimage import generic_filter
 from scipy.signal import find_peaks
-from parameters import Parameters as params
+from parameters import Parameters 
+params = Parameters()
 
 
 # ══════════════════════════════════════════
