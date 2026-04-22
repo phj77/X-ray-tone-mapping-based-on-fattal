@@ -39,9 +39,7 @@ def save_ldr(img: np.ndarray, path: str):
     img = np.clip(img, 0.0, 1.0)
     img = np.power(img, 1.0 / 2.2)
     cv2.imwrite(path, (img * 255).astype(np.uint8))
-
-
-
+    
 # 2026.04.22 - 11:51
 def compute_gradient(img):
     """Compute gradient ∇ (using np.gradient)"""
