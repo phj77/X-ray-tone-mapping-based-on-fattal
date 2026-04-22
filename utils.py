@@ -6,15 +6,19 @@ import cv2
 import numpy as np
 
 
-def load_hdr(path: str) -> np.ndarray:
+def load_hdr(path: str):
     """
     Read .hdr / .pic files as float32 BGR
     shape: (H, W, 3), dtype: float32, range: [0, ∞)
     """
-    img = cv2.imread(path, cv2.IMREAD_ANYDEPTH | cv2.IMREAD_COLOR)
-    if img is None:
+    # Read HDR image (.hdr format)
+    I = cv2.imread(path, cv2.IMREAD_UNCHANGED).astype(np.float32)
+    if I.ndim == 3 and I.shape[2] == 3:
+        # Convert to grayscale (paper framework is designed for single channel intensity)
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
+    if I is None:
         raise FileNotFoundError(f"Can't open HDR file: {path}")
-    return img.astype(np.float32)
+    return I
 
 
 def load_ldr(path: str) -> np.ndarray:
