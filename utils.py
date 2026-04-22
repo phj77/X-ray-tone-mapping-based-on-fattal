@@ -39,18 +39,3 @@ def save_ldr(img: np.ndarray, path: str):
     img = np.clip(img, 0.0, 1.0)
     img = np.power(img, 1.0 / 2.2)
     cv2.imwrite(path, (img * 255).astype(np.uint8))
-    
-# 2026.04.22 - 11:51
-def compute_gradient(img):
-    """Compute gradient ∇ (using np.gradient)"""
-    gx = np.gradient(img, axis=0)
-    gy = np.gradient(img, axis=1)
-    return gx, gy
-
-
-# 2026.04.22 - 11:51
-def compute_divergence(px, py):
-    """Compute divergence (using np.gradient for discretization)"""
-    dpx_dx = np.gradient(px, axis=0)
-    dpy_dy = np.gradient(py, axis=1)
-    return dpx_dx + dpy_dy
