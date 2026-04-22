@@ -10,8 +10,9 @@ Step 3. Fuzzy enhancement & scaling      Section 2.2.3 / Eq. (16), (17)
 
 import numpy as np
 import cv2
-from scipy.ndimage import generic_filter
+from scipy.ndimage import generic_filter, laplace
 from scipy.signal import find_peaks
+from gradient import compute_gradient_central_difference, compute_divergence_central_difference
 from parameters import Parameters 
 params = Parameters()
 
@@ -106,9 +107,7 @@ def _compressed_gradient(H: np.ndarray, K: np.ndarray): # I used forward differe
     Returns:
         Gx, Gy : compressed gradients along x and y directions
     """
-    H_pad = np.pad(H, 1, mode='reflect')
-    dx_H = H_pad[1:-1, 2:] - H_pad[1:-1, 1:-1]
-    dy_H = H_pad[2:, 1:-1] - H_pad[1:-1, 1:-1]
+    dx_H, dy_H = compute_gradient_central_difference(H)
     Gx = dx_H * K
     Gy = dy_H * K
     
@@ -131,18 +130,27 @@ def _gradient_descent( # used backward difference for div G referring to origina
     """
     # initial f : H
     f = H.copy()
-    div_G = Gx + Gy
-    tv_flow = _tv_flow(f)
-    laplacian_kernel = np.array([[0, 1, 0],
-                            [1, -4, 1],
-                            [0, 1, 0]], dtype=np.float32)
-    laplacian_f = cv2.filter2D(f, -1, laplacian_kernel, borderType=cv2.BORDER_DEFAULT)
-    mae = 1000000
-    while mae > delta:
-        f_tmp = f + dt * ((alpha + 1) * laplacian_f + beta / 2 * tv_flow - div_G)
-        f_next = np.maximum(0, np.minimum(1,f_tmp))
+    for n in range(params.max_iterations):
+        # div(G) = ∇·G = ∂Gx/∂x + ∂Gy/∂y
+        div_G = compute_divergence_central_difference(Gx, Gy)
+        
+        # TV term: div(∇f / |∇f|)
+        tv_flow = _tv_flow(f)
+        
+        # Laplacian)
+        laplacian_f = laplace(f)
+
+        f_tmp = f + dt * ((alpha + 1) * laplacian_f + (beta / 2) * tv_flow - div_G)
+
+        f_next = np.maximum(0.0, np.minimum(1.0, f_tmp))
+
         mae = np.mean(np.abs(f_next - f))
+
         f = f_next
+
+        if mae < delta:
+            print(f"End at iteration {n+1} with MAE = {mae:.6f}")
+            break
 
     return f
 
@@ -151,18 +159,11 @@ def _tv_flow(f: np.ndarray, eps: float=params.eps): # used central defference fo
     Gradient descent flow of TV regularization.
     Eq. (13): (fx²·fyy + fy²·fxx - 2·fx·fy·fxy) / (fx²+fy²+ε)^(3/2)
     """
-    f_pad = np.pad(f, 1, mode='reflect')
-    dx_f = (f_pad[1:-1, 2:] - f_pad[1:-1, 0:-2]) / 2
-    dy_f = (f_pad[2:, 1:-1] - f_pad[0:-2, 1:-1]) / 2
-    dxdx_f = f_pad[1:-1, 2:] + f_pad[1:-1, 0:-2] - 2*f
-    dydy_f = f_pad[2:, 1:-1] + f_pad[0:-2, 1:-1] - 2*f
-    dxdy_kernel = np.array([[-1, 0, 1],
-                            [0,0,0],
-                            [1,0,-1]], dtype=np.float32) / 4
-    
-    dxdy_f = cv2.filter2D(f, -1, dxdy_kernel, borderType=cv2.BORDER_DEFAULT)
-    
-    tv_flow = (dx_f**2 * dydy_f + dy_f**2 * dxdx_f - 2*dx_f*dy_f*dxdy_f) / (dx_f**2 + dy_f**2 + eps)
+    fx, fy = compute_gradient_central_difference(f)
+    norm_grad = np.sqrt(fx**2 + fy**2) + eps
+    vx = fx / norm_grad
+    vy = fy / norm_grad
+    tv_flow = compute_divergence_central_difference(vx, vy)
     return tv_flow
 
 
