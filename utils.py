@@ -14,7 +14,7 @@ def load_hdr(path: str):
     # Read HDR image (.hdr format)
     I = cv2.imread(path, cv2.IMREAD_UNCHANGED).astype(np.float32)
     if I.ndim == 3 and I.shape[2] == 3:
-        # Convert to grayscale (paper framework is designed for single-channel intensity)
+        # Convert to grayscale (paper framework is designed for single channel intensity)
         I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
     if I is None:
         raise FileNotFoundError(f"Can't open HDR file: {path}")
@@ -40,15 +40,6 @@ def save_ldr(img: np.ndarray, path: str):
     img = np.power(img, 1.0 / 2.2)
     cv2.imwrite(path, (img * 255).astype(np.uint8))
 
-
-# 2026.04.22 - 11:51
-def local_fuzzy_entropy(neighborhood):
-    """Compute local fuzzy entropy according to Eq. (6) + (7) - 3x3 neighborhood"""
-    mean_val = np.mean(neighborhood)
-    mu = 1.0 / (1.0 + np.abs(neighborhood - mean_val))
-    mu = np.clip(mu, 1e-10, 1.0 - 1e-10) # avoid log(0) or log(1)
-    entropy = np.mean(-mu * np.log2(mu))
-    return entropy
 
 
 # 2026.04.22 - 11:51
