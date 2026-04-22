@@ -12,6 +12,8 @@ import numpy as np
 import cv2
 from scipy.ndimage import generic_filter
 from scipy.signal import find_peaks
+from parameters import Parameters as params
+
 
 # ══════════════════════════════════════════
 # Step 1. Global logarithmic mapping
@@ -23,7 +25,8 @@ def _step1_log_mapping(img: np.ndarray):
     """
     L_max_img = img.max()
     print(f"Original max intensity (L_max): {L_max_img}")
-    H = np.log(img + 1.0) / np.log(L_max_img + 1.0) # H ∈ [0, 1] (sect. 2.2.1)
+
+    H = np.log(img + 1.0) / np.log(L_max_img + 1.0) # H in [0, 1] (sect. 2.2.1)
     return H
 
 
@@ -33,22 +36,23 @@ def _step1_log_mapping(img: np.ndarray):
 def _step2_gradient_tmo(
     H: np.ndarray,
     gamma: float,
-    delta: float,
 ) -> np.ndarray:
     """
     Full flow of Step 2.
-    """          
-    E            = generic_filter(H, _local_fuzzy_entropy, size=3) # Eq. (6), (7)
+    """
+    E            = generic_filter(H, _local_fuzzy_entropy, size=params.neighbor_size) # Eq. (6), (7)
     K            = _attenuation(E, gamma) # Eq. (8)
-    
-# for exp: check current issues (while image, many noise) ..
+
+    # ============
+    # for exp: check current issues (while image, many noise) ..
     print(f"\nE min = {E.min():.6f}, E max = {E.max():.6f}, E mean = {E.mean():.6f}")
     print(f"\nK min = {K.min():.2f}, K max = {K.max():.2f}, K mean = {K.mean():.2f}")
-#
+    # ============
 
-    alpha, beta  = _weights(E, eps=1e-8)                  # Eq. (10)
-    Gx, Gy       = _compressed_gradient(H, K)  # Eq. (2)
-    f            = _gradient_descent(H, Gx, Gy, alpha, beta, delta)  # Eq. (12)~(15)
+
+    alpha, beta  = _weights(E, eps=params.eps) # Eq. (10)
+    Gx, Gy       = _compressed_gradient(H, K) # Eq. (2)
+    f            = _gradient_descent(H, Gx, Gy, alpha=alpha, beta=beta) # Eq. (12)~(15)
     return f
 
 def _local_fuzzy_entropy(neighborhood):
@@ -60,7 +64,6 @@ def _local_fuzzy_entropy(neighborhood):
     Eq. (7): μ_H(k,l) = 1 / (1 + |H(k,l) - H_mean(x,y)|)
     """
     # print("\nComputing local fuzzy entropy with neighborhood: ", neighborhood)
-    
     mean_val = np.mean(neighborhood)
     mu = 1.0 / (1.0 + np.abs(neighborhood - mean_val))
     mu = np.clip(mu, 1e-10, 1.0 - 1e-10) # avoid log(0) or log(1)
@@ -73,11 +76,10 @@ def _attenuation(E: np.ndarray, gamma: float):
     Eq. (8): K_entropy = 1 / E^γ  (E != 0),  0  (E = 0)
     """
     print(f"\nProcessing with gamma: ", gamma)
-
-    K = np.where(E > 0, 1.0 / (E ** gamma), 0.0)
+    K = np.where(E > 0, 1.0 / (E ** gamma), 0.0) # E in [0, 1], so E != 0 means E > 0
     return K
 
-def _weights(E: np.ndarray, eps: float = 1e-6):
+def _weights(E: np.ndarray, eps: float=params.eps):
     """
     Compute hybrid regularization weights α and β.
     Eq. (10): α = log(1 / (E + ε)), normalized to [0, 1],  β = 1 - α
@@ -108,6 +110,7 @@ def _compressed_gradient(H: np.ndarray, K: np.ndarray): # I used forward differe
     dy_H = H_pad[2:, 1:-1] - H_pad[1:-1, 1:-1]
     Gx = dx_H * K
     Gy = dy_H * K
+    
     return Gx, Gy
 
 def _gradient_descent( # used backward difference for div G referring to original fattal paper
@@ -116,8 +119,8 @@ def _gradient_descent( # used backward difference for div G referring to origina
     Gy: np.ndarray,
     alpha: np.ndarray,
     beta: np.ndarray,
-    delta: float,
-    dt: float = 0.25,
+    delta: float=params.delta,
+    dt: float=params.dt,
 ) -> np.ndarray:
     """
     Minimize energy function Eq. (9) via gradient descent to estimate f.
@@ -135,14 +138,14 @@ def _gradient_descent( # used backward difference for div G referring to origina
     laplacian_f = cv2.filter2D(f, -1, laplacian_kernel, borderType=cv2.BORDER_DEFAULT)
     mae = 1000000
     while mae > delta:
-        f_tmp = f + dt *((alpha + 1) * laplacian_f + beta / 2 * tv_flow - div_G)
+        f_tmp = f + dt * ((alpha + 1) * laplacian_f + beta / 2 * tv_flow - div_G)
         f_next = np.maximum(0, np.minimum(1,f_tmp))
         mae = np.mean(np.abs(f_next - f))
         f = f_next
 
     return f
 
-def _tv_flow(f: np.ndarray, eps: float = 1e-8): # used central defference for grad f, second order difference f; is it ok respect to numerical viewpoint?
+def _tv_flow(f: np.ndarray, eps: float=params.eps): # used central defference for grad f, second order difference f; is it ok respect to numerical viewpoint?
     """
     Gradient descent flow of TV regularization.
     Eq. (13): (fx²·fyy + fy²·fxx - 2·fx·fy·fxy) / (fx²+fy²+ε)^(3/2)
@@ -177,8 +180,6 @@ def _find_fc(f: np.ndarray):
     """
     Automatically determine fc from the rightmost trough of the histogram of f.
     Strong edges tend to appear as troughs in the histogram due to fewer pixels.
-
-    TODO: implement
     """
     # f_c = rightmost trough of histogram of gradient-toned image f
     hist, bin_edges = np.histogram(f.ravel(), bins=256, range=(0.0, 1.0))
@@ -188,9 +189,9 @@ def _find_fc(f: np.ndarray):
         rightmost = troughs_idx[-1]
         fc = (bin_edges[rightmost] + bin_edges[rightmost + 1]) / 2.0
     else:
-        fc = 0.5
-    print(f"f_c (rightmost trough) = {fc:.4f}")
+        fc = params.fc
 
+    print(f"f_c (rightmost trough) = {fc:.4f}")
     return fc
 
 def _fuzzy_operator(f: np.ndarray, fc: float):
@@ -198,9 +199,7 @@ def _fuzzy_operator(f: np.ndarray, fc: float):
     Apply fuzzy enhancement operator and scale to output.
     Eq. (16): μ'_f = μ_f² / fc              (0 <= μ_f <= fc)
               μ'_f = 1 - (1-μ_f)²/(1-fc)   (fc < μ_f <= 1)
-    Eq. (17): fout = Lmax · μ'_f  ->  since Lmax=1, fout = μ'_f
-
-    TODO: implement
+    Eq. (17): f_out = Lmax · μ'_f  ->  since Lmax=1, fout = μ'_f
     """
     # Fuzzy operator
     mu = f
@@ -219,7 +218,7 @@ def _fuzzy_operator(f: np.ndarray, fc: float):
 # ═════════════════════════════════════════
 # Main tonemap function
 # ═════════════════════════════════════════
-def tonemap(img: np.ndarray, gamma: float = 0.51, delta: float = 0.05):
+def tonemap(img: np.ndarray, gamma: float):
     """
     Full HDR -> LDR pipeline.
 
@@ -228,11 +227,9 @@ def tonemap(img: np.ndarray, gamma: float = 0.51, delta: float = 0.05):
         gamma : Attenuation factor γ, range [0, 1]  (paper recommendation: 0.43~0.51)
         delta : Iteration stopping threshold δ       (paper default: 0.05)
     Returns:
-        fout  : Output LDR image, float32, range [0, 1]
+        f_out  : Output LDR image, float32, range [0, 1]
     """
-#
-# 
     H    = _step1_log_mapping(img)
-    f    = _step2_gradient_tmo(H, gamma, delta)
+    f    = _step2_gradient_tmo(H, gamma=gamma)
     f_out = _step3_fuzzy_enhance(f)
     return f_out
