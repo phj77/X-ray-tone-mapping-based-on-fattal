@@ -12,8 +12,8 @@ import numpy as np
 import cv2
 from scipy.ndimage import generic_filter, laplace
 from scipy.signal import find_peaks
-from gradient import compute_gradient_central_difference, compute_divergence_central_difference
-from parameters import Parameters 
+from gradient_tone_mapping.gradient import compute_gradient_central_difference, compute_divergence_central_difference
+from gradient_tone_mapping.parameters import Parameters 
 params = Parameters()
 
 
@@ -133,6 +133,7 @@ def _gradient_descent( # used backward difference for div G referring to origina
     # initial f : H
     f = H.copy()
     for n in range(params.max_iterations):
+        print(f"\nIteration {n+1}/{params.max_iterations}")
         # div(G) = ∇·G = ∂Gx/∂x + ∂Gy/∂y
         div_G = compute_divergence_central_difference(Gx, Gy)
         
@@ -147,6 +148,7 @@ def _gradient_descent( # used backward difference for div G referring to origina
         f_next = np.maximum(0.0, np.minimum(1.0, f_tmp))
 
         mae = np.mean(np.abs(f_next - f))
+        print(f"MAE between iterations: {mae:.6f}")
 
         f = f_next
 
