@@ -132,6 +132,10 @@ def _gradient_descent( # used backward difference for div G referring to origina
     # initial f : H
     f = H.copy()
     for n in range(params.max_iterations):
+
+        print(f"{n+1}번째요~!!")
+
+
         # div(G) = ∇·G = ∂Gx/∂x + ∂Gy/∂y
         div_G = compute_divergence_central_difference(Gx, Gy)
         
@@ -149,7 +153,7 @@ def _gradient_descent( # used backward difference for div G referring to origina
 
         f = f_next
 
-        if mae < delta:
+        if mae < delta or n == params.max_iterations - 1:
             print(f"End at iteration {n+1} with MAE = {mae:.6f}")
             break
 
