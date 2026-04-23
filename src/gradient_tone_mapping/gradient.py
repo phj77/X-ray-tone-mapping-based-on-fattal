@@ -34,12 +34,38 @@ def compute_gradient_forward_difference(img):
     return dx_H, dy_H
 
 
-# 2026.04.22 - last updated at 11:51
+# 2026.04.23 - last updated at 23:32
 def compute_divergence_forward_difference(px, py):
     """
     Compute divergence (using Forward difference for discretization)
     divF = ∇ ⋅ F = ∂Fx/∂x + ∂Fy/∂y
     """
-    dpx_dx = px[1:-1, 2:] - px[1:-1, 1:-1]
-    dpy_dy = py[2:, 1:-1] - py[1:-1, 1:-1]
+    px_pad = np.pad(px, 1, mode='reflect')
+    py_pad = np.pad(py, 1, mode='reflect')
+    dpx_dx = px_pad[1:-1, 2:] - px_pad[1:-1, 1:-1]
+    dpy_dy = py_pad[2:, 1:-1] - py_pad[1:-1, 1:-1]
+    return dpx_dx + dpy_dy
+
+# 2026.04.23 - last updated at 23:32s
+def compute_gradient_backward_difference(img):
+    """
+    Compute gradient ∇ (using backward difference)
+    - backward difference: ∇f(x) ≈ f(x) - f(x - 1)
+    """
+    H_pad = np.pad(img, 1, mode='reflect')
+    dx_H = H_pad[1:-1, 1:-1] - H_pad[1:-1, 0:-2]
+    dy_H = H_pad[1:-1, 1:-1] - H_pad[0:-2, 1:-1]
+    return dx_H, dy_H
+
+
+# 2026.04.23 - last updated at 23:32
+def compute_divergence_backward_difference(px, py):
+    """
+    Compute divergence (using backward difference for discretization)
+    divF = ∇ ⋅ F = ∂Fx/∂x + ∂Fy/∂y
+    """
+    px_pad = np.pad(px, 1, mode='reflect')
+    py_pad = np.pad(py, 1, mode='reflect')
+    dpx_dx = px_pad[1:-1, 1:-1] - px_pad[1:-1, 0:-2]
+    dpy_dy = py_pad[1:-1, 1:-1] - py_pad[0:-2, 1:-1]
     return dpx_dx + dpy_dy
