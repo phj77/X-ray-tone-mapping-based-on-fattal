@@ -6,24 +6,23 @@ C:.
 │   old_output.png
 │   README.md
 │   
-├───data
+├───data # data folder
 │       poor_battery_images_dataset.zip
 │       
 └───src
     │   app.py
     │   main.py
-    │   output.png
     │   
-    ├───exps
+    ├───exps # experimental space: we will write the code to test here
     │       exp.ipynb
     │       temp.ipynb
     │       
-    ├───generals
+    ├───generals # general space: we will place commonly used functions here.
     │       postprocess.py
     │       preprocess.py
     │       utils.py
     │       
-    └───gradient_tone_mapping
+    └───gradient_tone_mapping # algorithm space: we will write each algo in a folder like this
             gradient.py
             parameters.py
             tonemap.py
