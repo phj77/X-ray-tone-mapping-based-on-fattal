@@ -66,8 +66,10 @@ def _local_fuzzy_entropy(neighborhood):
     Eq. (7): μ_H(k,l) = 1 / (1 + |H(k,l) - H_mean(x,y)|)
     """
     # print("\nComputing local fuzzy entropy with neighborhood: ", neighborhood)
-    mean_val = np.mean(neighborhood)
-    mu = 1.0 / (1.0 + np.abs(neighborhood - mean_val))
+    neighbors = np.delete(neighborhood.flatten(), 4)
+    
+    mean_val = np.mean(neighbors)
+    mu = 1.0 / (1.0 + np.abs(neighbors - mean_val))
     mu = np.clip(mu, 1e-10, 1.0 - 1e-10) # avoid log(0) or log(1)
     E = np.mean(-mu * np.log2(mu)) # E: entropy
     return E
