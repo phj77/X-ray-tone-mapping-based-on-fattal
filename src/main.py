@@ -6,10 +6,10 @@ how to use: python main.py input.hdr output.png
 """
  
 import sys
-from utils import load_hdr, save_ldr
-from preprocess import preprocess
-from tonemap import tonemap
-from postprocess import postprocess
+from src.generals.utils import load_hdr, save_ldr
+from src.generals.preprocess import preprocess
+from src.gradient_tone_mapping.tonemap import tonemap
+from src.generals.postprocess import postprocess
  
  
 def run(input_path: str, output_path: str):

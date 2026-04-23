@@ -12,8 +12,8 @@ import numpy as np
 import cv2
 from scipy.ndimage import generic_filter, laplace
 from scipy.signal import find_peaks
-from gradient import compute_gradient_central_difference, compute_divergence_central_difference
-from parameters import Parameters 
+from src.gradient_tone_mapping.gradient import compute_gradient_central_difference, compute_divergence_central_difference
+from src.gradient_tone_mapping.parameters import Parameters 
 params = Parameters()
 
 
@@ -66,8 +66,9 @@ def _local_fuzzy_entropy(neighborhood):
     Eq. (7): μ_H(k,l) = 1 / (1 + |H(k,l) - H_mean(x,y)|)
     """
     # print("\nComputing local fuzzy entropy with neighborhood: ", neighborhood)
-    mean_val = np.mean(neighborhood)
-    mu = 1.0 / (1.0 + np.abs(neighborhood - mean_val))
+    neighbor_wo_ct = neighborhood[np.arange(len(neighborhood)) != (len(neighborhood)//2)]
+    mean_val = np.mean(neighbor_wo_ct)
+    mu = 1.0 / (1.0 + np.abs(neighbor_wo_ct - mean_val))
     mu = np.clip(mu, 1e-10, 1.0 - 1e-10) # avoid log(0) or log(1)
     E = np.mean(-mu * np.log2(mu)) # E: entropy
     return E
