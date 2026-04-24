@@ -1,7 +1,7 @@
 
 class Parameters:
     def __init__(self):
-        self.gamma_values = [0.8] # in paper: sect. 3.1
+        self.gamma_values = [0.2,0.4,0.6,0.8,0.9] # in paper: sect. 3.1
         self.delta = 0.05 # in paper: sect. 3.1
         self.eps = 1e-8
         self.neighbor_size = 3 # the neighborhood pixel number, in paper: setc. 2.2.2.1

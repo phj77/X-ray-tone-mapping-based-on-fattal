@@ -4,7 +4,7 @@ import numpy as np
 
 # 1. HDR 이미지 로드
 # cv2.IMREAD_UNCHANGED 플래그를 사용해야 데이터를 변환하지 않고 원본(float32 등) 그대로 읽습니다.
-file_path = 'input.hdr'  # .hdr 또는 .exr 파일 경로
+file_path = './data/image_sample/3_Boundary_Halo/01_3072 x 2048_pos(1)_NG.hdr'  # .hdr 또는 .exr 파일 경로
 hdr_img = cv2.imread(file_path, cv2.IMREAD_UNCHANGED)
 
 if hdr_img is None:
@@ -18,7 +18,7 @@ else:
     
     # bins 숫자는 데이터의 정밀도에 따라 조절 가능합니다.
     # HDR 특성상 특정 구간에 값이 몰려 있을 수 있으므로 y축 로그 스케일을 권장합니다.
-    plt.hist(pixels, bins=1000,range=(0,300000), color='blue', alpha=0.7, edgecolor='black')
+    plt.hist(pixels, bins=1000, color='blue', alpha=0.7, edgecolor='black')
     
     plt.yscale('log')  # 빈도수 차이가 클 경우 분포를 더 잘 보기 위해 로그 스케일 적용
     plt.title('Raw HDR Pixel Value Histogram')
