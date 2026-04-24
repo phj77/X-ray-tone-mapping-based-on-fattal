@@ -133,9 +133,6 @@ def _gradient_descent( # used backward difference for div G referring to origina
     f = H.copy()
     for n in range(params.max_iterations):
 
-        print(f"{n+1}번째요~!!")
-
-
         # div(G) = ∇·G = ∂Gx/∂x + ∂Gy/∂y
         div_G = compute_divergence_central_difference(Gx, Gy)
         
@@ -240,3 +237,31 @@ def tonemap(img: np.ndarray, gamma: float):
     f    = _step2_gradient_tmo(H, gamma=gamma)
     f_out = _step3_fuzzy_enhance(f)
     return f_out
+
+#======================================================================================================
+#======================================================================================================
+# def tonemap_several_gammas(img: np.ndarray, gammas: float):
+#     """
+#     We don't need to calculate same E(fuzzy entropy) for testing several gammas.
+#     So, calculate E just once.
+#     """
+#     H    = _step1_log_mapping(img)
+#     E            = generic_filter(H, _local_fuzzy_entropy, size=params.neighbor_size) # Eq. (6), (7)
+#     K_list = []
+#     for gamma in gammas:
+#         K_list.append(_attenuation(E, gamma))
+#     K_arr = np.array(K_list)
+
+#     # ============
+#     # for exp: check current issues (while image, many noise) ..
+#     print(f"\nE min = {E.min():.6f}, E max = {E.max():.6f}, E mean = {E.mean():.6f}")
+#     print(f"\nK min = {K.min():.2f}, K max = {K.max():.2f}, K mean = {K.mean():.2f}")
+#     # ============
+
+
+#     alpha, beta  = _weights(E, eps=params.eps) # Eq. (10)
+#     Gx, Gy       = _compressed_gradient(H, K) # Eq. (2)
+#     f            = _gradient_descent(H, Gx, Gy, alpha=alpha, beta=beta) # Eq. (12)~(15)
+
+
+#     return maps
