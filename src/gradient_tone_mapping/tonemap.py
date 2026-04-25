@@ -12,7 +12,7 @@ import numpy as np
 import cv2
 from scipy.ndimage import generic_filter, laplace
 from scipy.signal import find_peaks
-from src.gradient_tone_mapping.gradient import compute_gradient_central_difference, compute_divergence_central_difference
+from src.gradient_tone_mapping.gradient import compute_gradient_central_difference, compute_divergence_central_difference,compute_divergence_forward_difference,compute_gradient_forward_difference,compute_gradient_backward_difference,compute_divergence_backward_difference
 from src.gradient_tone_mapping.parameters import Parameters 
 params = Parameters()
 
