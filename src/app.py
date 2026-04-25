@@ -41,7 +41,7 @@ with st.sidebar:
     
     hdr_image = None
     
-    if input_mode == "Dataset":
+    if input_mode == "Upload File":
         dataset_path = Path("poor_battery_images_dataset")
         
         if dataset_path.exists():
@@ -83,9 +83,9 @@ with st.sidebar:
     # Enable/Disable toggles
     col_pre, col_post = st.columns(2)
     with col_pre:
-        apply_preprocess = st.checkbox("Apply Preprocess", value=True)
+        apply_preprocess = st.checkbox("Apply Preprocess", value=False)
     with col_post:
-        apply_postprocess = st.checkbox("Apply Postprocess", value=True)
+        apply_postprocess = st.checkbox("Apply Postprocess", value=False)
     
     st.divider()
     
