@@ -5,3 +5,8 @@ __pycache__/
 
 *.zip
 # *.hdr
+
+data/poor_battery_images_dataset/
+data/
+
+src/exps/temp.ipynb
